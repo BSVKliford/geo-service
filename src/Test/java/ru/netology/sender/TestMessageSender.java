@@ -19,13 +19,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class TestMessageSender {
     @ParameterizedTest
     @MethodSource("value")
-    void Send(String ip, String expected) {
+    void Send(String ip, String expected, Location location) {
         GeoService geoService = Mockito.mock(GeoServiceImpl.class);
-        Mockito.when(geoService.byIp(Mockito.startsWith("172."))).thenReturn(new Location("Moscow", Country.RUSSIA, null, 0));
-        Mockito.when(geoService.byIp(Mockito.startsWith("96."))).thenReturn(new Location("New York", Country.USA, null, 0));
+        Mockito.when(geoService.byIp(Mockito.startsWith(ip))).thenReturn(location);
         LocalizationService localizationService = Mockito.mock(LocalizationService.class);
-        Mockito.when(localizationService.locale(Country.RUSSIA)).thenReturn("Добро пожаловать");
-        Mockito.when(localizationService.locale(Country.USA)).thenReturn("Welcome");
+        Mockito.when(localizationService.locale(location.getCountry())).thenReturn(expected);
         MessageSender messageSender = new MessageSenderImpl(geoService, localizationService);
         Map<String, String> headers = new HashMap<String, String>();
         headers.put(MessageSenderImpl.IP_ADDRESS_HEADER, ip);
@@ -34,7 +32,7 @@ public class TestMessageSender {
     }
 
     public static Stream<Arguments> value() {
-        return Stream.of(Arguments.of("172.0.32.11", "Добро пожаловать"),
-                Arguments.of("96.44.183.149", "Welcome"));
+        return Stream.of(Arguments.of("172.0.32.11", "Добро пожаловать", new Location("Moscow", Country.RUSSIA, null, 0)),
+                Arguments.of("96.44.183.149", "Welcome", new Location("New York", Country.USA, null, 0)));
     }
 }
